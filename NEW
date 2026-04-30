@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<title>职业路径 · 能力地图</title>
+<style>
+/* ===== CSS Variables & Reset ===== */
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #666666;
+  --color-text-tertiary: #999999;
+  --color-text-info: #378ADD;
+  --color-text-success: #1D9E75;
+  --color-text-warning: #BA7517;
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f5f5f7;
+  --color-background-info: #E8F4FD;
+  --color-background-success: #E6F7F1;
+  --color-background-warning: #FDF6E8;
+  --color-border-secondary: #e0e0e0;
+  --color-border-tertiary: #eeeeee;
+  --border-radius-md: 10px;
+  --border-radius-lg: 14px;
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-text-primary: #f0f0f0;
+    --color-text-secondary: #b0b0b0;
+    --color-text-tertiary: #808080;
+    --color-background-primary: #1c1c1e;
+    --color-background-secondary: #2c2c2e;
+    --color-background-info: #1a3a5c;
+    --color-background-success: #1a3d2e;
+    --color-background-warning: #3d2e1a;
+    --color-border-secondary: #3a3a3c;
+    --color-border-tertiary: #2c2c2e;
+  }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: var(--font-sans);
+  background: var(--color-background-primary);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+  padding-bottom: var(--safe-area-inset-bottom);
+}
+
+/* ===== Layout ===== */
+.wrap {
+  max-width: 768px;
+  margin: 0 auto;
+  padding: 1rem;
+  min-height: 100vh;
+}
+
+/* ===== Header ===== */
+.header { text-align: center; margin-bottom: 1.5rem; padding-top: 0.5rem; }
+.header h2 { font-size: 20px; font-weight: 600; color: var(--color-text-primary); letter-spacing: -0.02em; }
+.header p { font-size: 13px; color: var(--color-text-secondary); margin-top: 6px; line-height: 1.6; }
+
+/* ===== Tabs ===== */
+.tabs {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--color-background-primary);
+  padding: 8px 0;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.tab {
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1px solid var(--color-border-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--color-background-primary);
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
+  -webkit-appearance: none;
+  outline: none;
+  touch-action: manipulation;
+  min-height: 36px;
+}
+.tab.active {
+  background: var(--color-background-info);
+  color: var(--color-text-info);
+  border-color: transparent;
+  font-weight: 600;
+}
+.tab:active { transform: scale(0.96); }
+
+/* ===== Panels ===== */
+.panel { display: none; animation: fadeIn 0.3s ease; }
+.panel.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== Timeline ===== */
+.timeline { position: relative; padding-left: 24px; }
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 12px;
+  bottom: 12px;
+  width: 2px;
+  background: var(--color-border-secondary);
+  border-radius: 1px;
+}
+.job { position: relative; margin-bottom: 1.25rem; }
+.job::before {
+  content: '';
+  position: absolute;
+  left: -22px;
+  top: 14px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2.5px solid var(--color-border-secondary);
+  background: var(--color-background-primary);
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+.job.active::before, .job.open::before {
+  border-color: var(--color-text-info);
+  background: var(--color-background-info);
+  transform: scale(1.1);
+}
+.job-card {
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-lg);
+  padding: 14px 16px;
+  border: 1px solid var(--color-border-tertiary);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  -webkit-touch-callout: none;
+}
+.job-card:active { transform: scale(0.99); }
+.job.open .job-card { border-color: var(--color-text-info); box-shadow: 0 2px 12px rgba(55, 138, 221, 0.08); }
+.job-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+.job-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.job-title { font-size: 15px; font-weight: 600; color: var(--color-text-primary); line-height: 1.4; }
+.job-meta { font-size: 12px; color: var(--color-text-secondary); margin-top: 3px; }
+
+.badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.badge {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 500;
+  display: inline-block;
+  line-height: 1.4;
+}
+.b-teal { background: var(--color-background-success); color: var(--color-text-success); }
+.b-blue { background: var(--color-background-info); color: var(--color-text-info); }
+.b-amber { background: var(--color-background-warning); color: var(--color-text-warning); }
+.b-coral { background: #FAECE7; color: #993C1D; }
+.b-purple { background: #EEEDFE; color: #534AB7; }
+
+.job-detail { display: none; margin-top: 12px; }
+.job.open .job-detail { display: block; animation: slideDown 0.25s ease; }
+@keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 2000px; } }
+
+.divider { height: 1px; background: var(--color-border-tertiary); margin: 12px 0; }
+.section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-tertiary); margin: 14px 0 6px; }
+.bullet { font-size: 13px; color: var(--color-text-secondary); line-height: 1.8; padding-left: 14px; position: relative; margin-bottom: 4px; }
+.bullet::before { content: '·'; position: absolute; left: 0; color: var(--color-text-tertiary); font-weight: 700; }
+
+/* ===== Skills Grid ===== */
+.skill-group { margin-bottom: 1.5rem; }
+.skill-group-title { font-size: 16px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--color-border-tertiary); }
+.skill-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.skill-card {
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-md);
+  padding: 12px 14px;
+  border: 1px solid var(--color-border-tertiary);
+  transition: transform 0.2s ease;
+}
+.skill-card:active { transform: scale(0.98); }
+.skill-card-title { font-size: 13px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 6px; }
+.skill-card-items { font-size: 12px; color: var(--color-text-secondary); line-height: 1.8; }
+
+/* ===== Achievements ===== */
+.ach-list { display: grid; gap: 10px; }
+.ach-item {
+  display: flex;
+  gap: 12px;
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-md);
+  padding: 12px 14px;
+  border: 1px solid var(--color-border-tertiary);
+  align-items: flex-start;
+  transition: transform 0.2s ease;
+}
+.ach-item:active { transform: scale(0.99); }
+.ach-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+.ach-label { font-size: 14px; font-weight: 600; color: var(--color-text-primary); line-height: 1.4; }
+.ach-sub { font-size: 12px; color: var(--color-text-secondary); margin-top: 3px; line-height: 1.6; }
+
+/* ===== iPad Specific Optimizations ===== */
+@media only screen and (min-device-width: 768px) and (max-device-width: 1366px) {
+  .wrap { max-width: 720px; padding: 1.5rem; }
+  .header h2 { font-size: 24px; }
+  .header p { font-size: 15px; }
+  .tab { padding: 10px 24px; font-size: 15px; border-radius: 24px; }
+  .job-title { font-size: 17px; }
+  .job-meta { font-size: 14px; }
+  .badge { font-size: 13px; padding: 5px 12px; }
+  .bullet { font-size: 15px; }
+  .section-label { font-size: 12px; }
+  .skill-group-title { font-size: 18px; }
+  .skill-card-title { font-size: 15px; }
+  .skill-card-items { font-size: 14px; }
+  .ach-label { font-size: 16px; }
+  .ach-sub { font-size: 14px; }
+  .timeline { padding-left: 32px; }
+  .timeline::before { left: 10px; }
+  .job::before { left: -26px; width: 14px; height: 14px; }
+}
+
+/* ===== Landscape iPad ===== */
+@media only screen and (min-device-width: 1024px) and (max-device-width: 1366px) and (orientation: landscape) {
+  .skill-cards { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ===== General Tablet ===== */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .skill-cards { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ===== Touch Device Enhancements ===== */
+@media (hover: none) {
+  .tab:hover:not(.active) { background: transparent; }
+  .job:hover::before { border-color: var(--color-border-secondary); background: var(--color-background-primary); }
+  .job.open:hover::before { border-color: var(--color-text-info); background: var(--color-background-info); }
+}
+
+/* ===== Safe Area for Notch Devices ===== */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .wrap { padding-top: max(1rem, env(safe-area-inset-top)); }
+}
+
+/* ===== Scrollbar Styling ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border-secondary); border-radius: 3px; }
+
+/* ===== Hint Text ===== */
+.hint-text { font-size: 12px; color: var(--color-text-tertiary); text-align: center; margin-top: 12px; padding-bottom: 20px; }
+</style>
+<base target="_blank">
+</head>
+<body>
+
+<div class="wrap">
+<div class="header">
+  <h2>职业路径 · 能力地图</h2>
+  <p>2018 — 2026 &nbsp;|&nbsp; 跨境出海 · 海外社媒 · 社群运营 · KOL合作</p>
+</div>
+
+<div class="tabs" role="tablist">
+  <button class="tab active" role="tab" aria-selected="true" onclick="switchTab('timeline')">时间线</button>
+  <button class="tab" role="tab" aria-selected="false" onclick="switchTab('skills')">核心能力</button>
+  <button class="tab" role="tab" aria-selected="false" onclick="switchTab('achievements')">代表成果</button>
+</div>
+
+<!-- TIMELINE -->
+<div id="panel-timeline" class="panel active" role="tabpanel">
+<div class="timeline">
+
+  <div class="job" id="j0" onclick="toggleJob('j0')" role="button" aria-expanded="false">
+    <div class="job-card">
+      <div class="job-header">
+        <div class="job-dot" style="background:#1D9E75"></div>
+        <div>
+          <div class="job-title">LED灯具外贸公司（实习）</div>
+          <div class="job-meta">深圳 · 2018.07 — 2019.07 · 1年</div>
+        </div>
+      </div>
+      <div class="badge-row">
+        <span class="badge b-teal">外贸询盘</span>
+        <span class="badge b-teal">阿里国际站</span>
+        <span class="badge b-teal">展会获客</span>
+        <span class="badge b-teal">社媒初探</span>
+        <span class="badge b-teal">物料制作</span>
+      </div>
+      <div class="job-detail">
+        <div class="divider"></div>
+        <div class="section-label">主要工作</div>
+        <div class="bullet">阿里国际站接受询盘、邮件开发客户</div>
+        <div class="bullet">自己提炼卖点、独立做产品图（优于套图，被其他同事采用）</div>
+        <div class="bullet">主动做 Instagram 社媒，有少量咨询转化</div>
+        <div class="bullet">接到荷兰植物工厂客户，自学制作灯光布局方案图，拿下样品订单</div>
+        <div class="bullet">香港展会，第一次展会即获得 12 万元样品单</div>
+        <div class="section-label">能力获得</div>
+        <div class="bullet">第一次接触跨境外贸全流程，海外客户沟通</div>
+        <div class="bullet">学会独立做图与卖点提炼，自学社媒运营</div>
+        <div class="bullet">获评"优秀新员工"</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="job" id="j1" onclick="toggleJob('j1')" role="button" aria-expanded="false">
+    <div class="job-card">
+      <div class="job-header">
+        <div class="job-dot" style="background:#378ADD"></div>
+        <div>
+          <div class="job-title">汽车诊断仪公司（独立站）</div>
+          <div class="job-meta">深圳 · 2019.06 — 2021.05 · 约2年</div>
+        </div>
+      </div>
+      <div class="badge-row">
+        <span class="badge b-blue">从0搭建社媒矩阵</span>
+        <span class="badge b-blue">FB社群私域</span>
+        <span class="badge b-blue">教程视频制作</span>
+        <span class="badge b-blue">内容自产</span>
+        <span class="badge b-blue">广告投放</span>
+      </div>
+      <div class="job-detail">
+        <div class="divider"></div>
+        <div class="section-label">主要工作</div>
+        <div class="bullet">一人从0搭建 Facebook、YouTube、Instagram、LinkedIn</div>
+        <div class="bullet">独立写脚本、拍摄、剪辑教程视频，自然流量超 10 万播放</div>
+        <div class="bullet">FB 社群从0做到 6000-7000 人，无广告投入</div>
+        <div class="bullet">联系线下汽修店/博主入群，构建用户自助解答体系</div>
+        <div class="bullet">社媒流量贡献独立站 20%-30%</div>
+        <div class="bullet">学习 FB 广告和 Google 广告投放</div>
+        <div class="section-label">能力获得</div>
+        <div class="bullet">社媒矩阵 0→1 搭建能力，内容自产能力</div>
+        <div class="bullet">私域社群从启动到运营的完整方法论</div>
+        <div class="bullet">技术型用户内容决策链路理解</div>
+        <div class="bullet">获评"优秀进步新员工"</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="job" id="j2" onclick="toggleJob('j2')" role="button" aria-expanded="false">
+    <div class="job-card">
+      <div class="job-header">
+        <div class="job-dot" style="background:#BA7517"></div>
+        <div>
+          <div class="job-title">3D打印行业 - ANYCUBIC </div>
+          <div class="job-meta">深圳 · 2021 — 2022 · 约1年</div>
+        </div>
+      </div>
+      <div class="badge-row">
+        <span class="badge b-amber">YouTube运营</span>
+        <span class="badge b-amber">TikTok活动</span>
+        <span class="badge b-amber">KOL联动</span>
+        <span class="badge b-amber">新品推广</span>
+        <span class="badge b-amber">海外众筹</span>
+        <span class="badge b-amber">品牌故事</span>
+      </div>
+      <div class="job-detail">
+        <div class="divider"></div>
+        <div class="section-label">主要工作</div>
+        <div class="bullet">专职负责 YouTube + TikTok，分工细化，深度打磨内容</div>
+        <div class="bullet">TikTok 从0做起，单月涨粉 8000，活动 Hashtag 累计播放 500-600 万</div>
+        <div class="bullet">策划品牌故事营销（用户用打印机给狗做义肢），被当地报社/电视台报道</div>
+        <div class="bullet">参与 Kickstarter 众筹全流程（最终金额1500万）</div>
+        <div class="bullet">参与海外直播筹备（流程、布置、投流）</div>
+        <div class="bullet">联系模型设计工作室、手工达人资源，用于新品推广</div>
+        <div class="section-label">能力获得</div>
+        <div class="bullet">新品推广全流程（预热→热度推进→维护→复盘）</div>
+        <div class="bullet">活动策划从创意到执行的完整能力</div>
+        <div class="bullet">品牌故事营销与UGC联动思维</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="job" id="j3" onclick="toggleJob('j3')" role="button" aria-expanded="false">
+    <div class="job-card">
+      <div class="job-header">
+        <div class="job-dot" style="background:#7F77DD"></div>
+        <div>
+          <div class="job-title">赛车模拟器出海公司</div>
+          <div class="job-meta">武汉 · 2022.09 — 2026.02 · 3年5个月</div>
+        </div>
+      </div>
+      <div class="badge-row">
+        <span class="badge b-purple">Reddit精细运营</span>
+        <span class="badge b-purple">Discord社群</span>
+        <span class="badge b-purple">KOL对接</span>
+        <span class="badge b-purple">品牌联名BD</span>
+        <span class="badge b-purple">舆情监控</span>
+        <span class="badge b-purple">用户调研</span>
+        <span class="badge b-purple">创作者联盟</span>
+        <span class="badge b-purple">品牌VI</span>
+      </div>
+      <div class="job-detail">
+        <div class="divider"></div>
+        <div class="section-label">KOL & 媒体</div>
+        <div class="bullet">联系并维护上百个KOL，覆盖垂类、科技大V、真实赛车手/驾校、电竞车手</div>
+        <div class="bullet">参与红牛电竞车队对接会议，辅助豪车品牌联名（兰博基尼、保时捷、布加迪、奔驰、Xbox）</div>
+        <div class="bullet">辅助搭建创作者联盟体系，签约并运营 30+ 垂类博主，建立标准化内容合作机制，为品牌稳定输出高质量视频与视觉素材。</div>
+        <div class="bullet">搭建专业测评/教程系列视频，单个系列可达上百条短视频</div>
+        <div class="section-label">Reddit 运营</div>
+        <div class="bullet">运营品牌subreddit，定期策划 AMA/群组间联合Giveaway活动</div>
+        <div class="bullet">收集用户痛点与需求，整理转交产品部门，定期舆情监控竞品社群</div>
+        <div class="bullet">及时介入产品危机舆情，联动售后，维护品牌口碑</div>
+        <div class="section-label">Discord 运营</div>
+        <div class="bullet">精细分类管理，定期举办产品调研投票，活跃期可数小时内收到1000+回复</div>
+        <div class="bullet">培养核心用户担任管理员，跨服务器联动拉新，单次活动一周涨粉3000</div>
+        <div class="bullet">搭建UGC创作者联盟（涂装设计、3D打印配件、仪表盘设计大赛等）增加用户参与度及挖掘优秀创作者资源</div>
+        <div class="bullet">利用 AI 分析导出内容，提炼高频关键词，指导产品与营销决策</div>
+        <div class="section-label">品牌与策划</div>
+        <div class="bullet">独立对接团队，主导品牌 VI 设计换新（官网色调、视觉风格、输出规范）</div>
+        <div class="bullet">所有对外 Proposal/PPT 设计优化（联名提案、赞助方案等）</div>
+        <div class="bullet">参与 F1 游戏、世界电竞大赛等联名合作辅助对接</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<p class="hint-text">点击任意职位卡片展开详情</p>
+</div>
+
+<!-- SKILLS -->
+<div id="panel-skills" class="panel" role="tabpanel">
+
+<div class="skill-group">
+  <div class="skill-group-title">🌐 海外社媒运营</div>
+  <div class="skill-cards">
+    <div class="skill-card"><div class="skill-card-title">平台矩阵</div><div class="skill-card-items">Facebook / Instagram<br>YouTube / TikTok<br>LinkedIn / Reddit<br>Discord</div></div>
+    <div class="skill-card"><div class="skill-card-title">内容能力</div><div class="skill-card-items">脚本策划 / 视频剪辑<br>物料设计（做图）<br>教程 & 购买指南<br>UGC活动策划</div></div>
+    <div class="skill-card"><div class="skill-card-title">运营策略</div><div class="skill-card-items">新品推广全流程<br>活动策划与执行<br>投流（FB / Google）<br>数据分析与复盘</div></div>
+  </div>
+</div>
+
+<div class="skill-group">
+  <div class="skill-group-title">💬 社群私域运营</div>
+  <div class="skill-cards">
+    <div class="skill-card"><div class="skill-card-title">社群从0到1</div><div class="skill-card-items">定位 & 内容体系<br>冷启动策略<br>跨平台引流拉新<br>用户自助体系搭建</div></div>
+    <div class="skill-card"><div class="skill-card-title">精细化运营</div><div class="skill-card-items">用户分层与激活<br>核心用户培养/管理员<br>舆情监控与危机处理<br>产品反馈收集机制</div></div>
+    <div class="skill-card"><div class="skill-card-title">用户研究</div><div class="skill-card-items">用户痛点挖掘<br>问卷设计与分析<br>竞品社群监控<br>AI辅助关键词分析</div></div>
+  </div>
+</div>
+
+<div class="skill-group">
+  <div class="skill-group-title">🤝 KOL & 外部合作</div>
+  <div class="skill-cards">
+    <div class="skill-card"><div class="skill-card-title">KOL开发</div><div class="skill-card-items">垂类博主开发<br>科技大V合作<br>真实赛车手/驾校<br>电竞车队赞助评估</div></div>
+    <div class="skill-card"><div class="skill-card-title">合作形式</div><div class="skill-card-items">测评/教程视频<br>创作者联盟体系<br>置换 & 联盟佣金<br>二次素材包装传播</div></div>
+    <div class="skill-card"><div class="skill-card-title">品牌BD</div><div class="skill-card-items">豪车品牌联名辅助<br>Proposal设计优化<br>权益梳理与谈判准备<br>赞助价值评估</div></div>
+  </div>
+</div>
+
+<div class="skill-group">
+  <div class="skill-group-title">🎨 品牌 & 创意</div>
+  <div class="skill-cards">
+    <div class="skill-card"><div class="skill-card-title">视觉能力</div><div class="skill-card-items">品牌VI系统规划<br>产品图 & 物料设计<br>视频剪辑 & 合成<br>Proposal视觉优化</div></div>
+    <div class="skill-card"><div class="skill-card-title">品牌营销</div><div class="skill-card-items">品牌故事策划<br>用户创作者联盟<br>众筹项目推广参与<br>海外直播筹备</div></div>
+    <div class="skill-card"><div class="skill-card-title">产品理解</div><div class="skill-card-items">深入学习产品知识<br>用户需求→产品建议<br>跨部门协作（产品/设计）<br>技术型用户内容思维</div></div>
+  </div>
+</div>
+
+</div>
+
+<!-- ACHIEVEMENTS -->
+<div id="panel-achievements" class="panel" role="tabpanel">
+<div class="ach-list">
+
+  <div class="ach-item">
+    <div class="ach-icon" style="background:var(--color-background-success)">📈</div>
+    <div><div class="ach-label">FB私域社群 0 → 6000+ 人</div><div class="ach-sub">无广告预算，纯内容运营，社媒贡献独立站 20%-30% 流量</div></div>
+  </div>
+
+  <div class="ach-item">
+    <div class="ach-icon" style="background:var(--color-background-warning)">🎵</div>
+    <div><div class="ach-label">TikTok 新品Hashtag累计播放 500-600 万</div><div class="ach-sub">新品联动活动，一般活动也有数十万；从0开始，单月涨粉 8000</div></div>
+  </div>
+
+
+  <div class="ach-item">
+    <div class="ach-icon" style="background:var(--color-background-success)">💬</div>
+    <div><div class="ach-label">Discord 社群增长</div><div class="ach-sub">单次跨平台联动活动，一周内拉新峰值3000 人，高效完成私域用户增长与社群活跃双目标</div></div>
+  </div>
+  
+  <div class="ach-item">
+    <div class="ach-icon" style="background:var(--color-background-success)">💬</div>
+    <div><div class="ach-label">创作者联盟搭建</div><div class="ach-sub">策划 UGC 二创活动、用户创作者联盟，沉淀核心用户，培养海外管理员，构建高粘性用户生态</div></div>
+  </div>
+  
+    <div class="ach-item">
+    <div class="ach-icon" style="background:var(--color-background-success)">💬</div>
+    <div><div class="ach-label">用户互动与调研</div><div class="ach-sub">Reddit AMA 用户问答，单帖单日评论量500-600 条，触达用户需求，反哺产品与运营策略</div></div>
+  </div>
+
+  <div class="ach-item">
+    <div class="ach-icon" style="background:var(--color-background-info)">🚗</div>
+    <div><div class="ach-label">大IP联名商务</div><div class="ach-sub">辅助对接兰博基尼、保时捷、布加迪、奔驰、Xbox、F1 游戏等；负责所有提案 PPT 设计优化</div></div>
+  </div>
+
+  <div class="ach-item">
+    <div class="ach-icon" style="background:var(--color-background-warning)">📰</div>
+    <div><div class="ach-label">品牌情感营销</div><div class="ach-sub">发掘用户用打印机给狗做义肢的故事，最终被当地报社和电视台报道，产品自然曝光</div></div>
+  </div>
+
+  <div class="ach-item">
+    <div class="ach-icon" style="background:#FAECE7">🎨</div>
+    <div><div class="ach-label">品牌视觉体系升级</div><div class="ach-sub">主导品牌 VI 焕新项目，独立对接外部设计团队，完成官网色调、视觉风格升级，统一品牌海外视觉形象</div></div>
+  </div>
+  
+   <div class="ach-item">
+    <div class="ach-icon" style="background:#EEEDFE">🏆</div>
+    <div><div class="ach-label">参与Kickstarter 众筹 1500 万项目</div><div class="ach-sub">了解新品推广流程，参与预热、热度推进、维护、复盘全流程（3D打印新品）</div></div>
+  </div>
+
+</div>
+</div>
+
+</div>
+
+<script>
+// Tab switching with animation lock
+let isAnimating = false;
+function switchTab(name) {
+  if (isAnimating) return;
+  isAnimating = true;
+
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.remove('active');
+    t.setAttribute('aria-selected', 'false');
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+
+  event.target.classList.add('active');
+  event.target.setAttribute('aria-selected', 'true');
+  document.getElementById('panel-' + name).classList.add('active');
+
+  setTimeout(() => { isAnimating = false; }, 300);
+}
+
+// Job toggle with smooth animation
+function toggleJob(id) {
+  const el = document.getElementById(id);
+  const wasOpen = el.classList.contains('open');
+
+  // Close all other jobs
+  document.querySelectorAll('.job').forEach(j => {
+    j.classList.remove('open', 'active');
+    j.setAttribute('aria-expanded', 'false');
+  });
+
+  if (!wasOpen) {
+    el.classList.add('open', 'active');
+    el.setAttribute('aria-expanded', 'true');
+
+    // Smooth scroll to element on mobile/tablet
+    if (window.innerWidth < 1024) {
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+      }, 100);
+    }
+  }
+}
+
+// Touch feedback optimization
+document.querySelectorAll('.job-card, .tab, .skill-card, .ach-item').forEach(el => {
+  el.addEventListener('touchstart', function() { this.style.opacity = '0.8'; }, {passive: true});
+  el.addEventListener('touchend', function() { this.style.opacity = '1'; }, {passive: true});
+  el.addEventListener('touchcancel', function() { this.style.opacity = '1'; }, {passive: true});
+});
+
+// Prevent double-tap zoom on iOS
+document.addEventListener('touchend', function(e) {
+  if (e.target.closest('.tab, .job-card')) {
+    e.preventDefault();
+    e.target.click();
+  }
+}, {passive: false});
+
+// Handle orientation change
+window.addEventListener('orientationchange', function() {
+  setTimeout(() => {
+    window.scrollTo(0, 0);
+  }, 200);
+});
+</script>
+
+</body>
+</html>
